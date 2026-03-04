@@ -1,84 +1,93 @@
 {
-  "project": "demo-project",
+  "project": "usb-camera-ai-analysis",
   "version": "1.0.0",
-  "description": "项目特性清单 - 基于 Anthropic Autonomous Coding 框架",
+  "description": "嵌入式设备屏幕捕获与AI分析系统",
   "features": [
     {
-      "id": "init-workspace",
+      "id": "init-project",
       "category": "setup",
-      "description": "初始化工作区，创建项目目录结构",
+      "description": "初始化项目结构，创建基础目录和配置文件",
       "steps": [
-        "创建项目根目录",
-        "创建 src 目录",
-        "创建 components 目录",
-        "初始化 git 仓库"
+        "创建项目目录结构",
+        "创建requirements.txt",
+        "创建基础配置文件"
       ],
       "passes": false,
       "priority": "high"
     },
     {
-      "id": "setup-env",
-      "category": "setup",
-      "description": "设置开发环境，安装依赖",
+      "id": "camera-capture",
+      "category": "functional",
+      "description": "实现USB摄像头捕获功能",
       "steps": [
-        "安装 Node.js 依赖",
-        "创建配置文件",
-        "验证环境可用"
+        "创建camera_capture.py模块",
+        "支持多摄像头",
+        "可配置分辨率和帧率"
       ],
       "passes": false,
       "priority": "high"
     },
     {
-      "id": "create-app-structure",
-      "category": "structure",
-      "description": "创建应用目录结构",
+      "id": "realtime-preview",
+      "category": "functional",
+      "description": "实现实时预览功能",
       "steps": [
-        "创建 src 目录",
-        "创建 components 目录",
-        "创建 utils 目录"
+        "创建Flask服务器",
+        "实现MJPEG流媒体",
+        "创建Web前端界面"
+      ],
+      "passes": false,
+      "priority": "high"
+    },
+    {
+      "id": "ocr-integration",
+      "category": "functional",
+      "description": "集成OCR文字识别功能",
+      "steps": [
+        "集成PaddleOCR",
+        "添加OCR API接口",
+        "支持中英文识别"
       ],
       "passes": false,
       "priority": "medium"
     },
     {
-      "id": "implement-auth",
+      "id": "ui-detection",
       "category": "functional",
-      "description": "实现用户认证功能",
+      "description": "实现UI元素检测功能",
       "steps": [
-        "创建登录页面",
-        "创建注册页面",
-        "实现 JWT 验证",
-        "测试登录流程"
-      ],
-      "passes": false,
-      "priority": "high"
-    },
-    {
-      "id": "implement-dashboard",
-      "category": "functional",
-      "description": "实现仪表盘功能",
-      "steps": [
-        "创建仪表盘页面",
-        "获取并展示数据",
-        "添加数据刷新功能",
-        "测试数据展示"
+        "集成YOLOv8模型",
+        "添加检测API接口",
+        "支持结果可视化"
       ],
       "passes": false,
       "priority": "medium"
     },
     {
-      "id": "style-cleanup",
-      "category": "style",
-      "description": "样式美化",
+      "id": "anomaly-detection",
+      "category": "functional",
+      "description": "实现异常检测功能",
       "steps": [
-        "统一配色方案",
-        "优化布局",
-        "添加响应式支持"
+        "实现颜色检测",
+        "实现区域检测",
+        "添加对比功能"
       ],
       "passes": false,
       "priority": "low"
+    },
+    {
+      "id": "api-development",
+      "category": "functional",
+      "description": "完善HTTP API接口",
+      "steps": [
+        "添加捕获控制API",
+        "添加分析结果API",
+        "添加配置API"
+      ],
+      "passes": false,
+      "priority": "medium"
     }
   ],
   "completed": [],
-  "last_updated": "2026-03-05T00:00:00Z"
+  "last_updated": "2026-03-05T01:00:00Z"
 }

@@ -1,0 +1,84 @@
+{
+  "project": "demo-project",
+  "version": "1.0.0",
+  "description": "项目特性清单 - 基于 Anthropic Autonomous Coding 框架",
+  "features": [
+    {
+      "id": "init-workspace",
+      "category": "setup",
+      "description": "初始化工作区，创建项目目录结构",
+      "steps": [
+        "创建项目根目录",
+        "创建 src 目录",
+        "创建 components 目录",
+        "初始化 git 仓库"
+      ],
+      "passes": false,
+      "priority": "high"
+    },
+    {
+      "id": "setup-env",
+      "category": "setup",
+      "description": "设置开发环境，安装依赖",
+      "steps": [
+        "安装 Node.js 依赖",
+        "创建配置文件",
+        "验证环境可用"
+      ],
+      "passes": false,
+      "priority": "high"
+    },
+    {
+      "id": "create-app-structure",
+      "category": "structure",
+      "description": "创建应用目录结构",
+      "steps": [
+        "创建 src 目录",
+        "创建 components 目录",
+        "创建 utils 目录"
+      ],
+      "passes": false,
+      "priority": "medium"
+    },
+    {
+      "id": "implement-auth",
+      "category": "functional",
+      "description": "实现用户认证功能",
+      "steps": [
+        "创建登录页面",
+        "创建注册页面",
+        "实现 JWT 验证",
+        "测试登录流程"
+      ],
+      "passes": false,
+      "priority": "high"
+    },
+    {
+      "id": "implement-dashboard",
+      "category": "functional",
+      "description": "实现仪表盘功能",
+      "steps": [
+        "创建仪表盘页面",
+        "获取并展示数据",
+        "添加数据刷新功能",
+        "测试数据展示"
+      ],
+      "passes": false,
+      "priority": "medium"
+    },
+    {
+      "id": "style-cleanup",
+      "category": "style",
+      "description": "样式美化",
+      "steps": [
+        "统一配色方案",
+        "优化布局",
+        "添加响应式支持"
+      ],
+      "passes": false,
+      "priority": "low"
+    }
+  ],
+  "completed": [],
+  "last_updated": "2026-03-05T00:00:00Z"
+}

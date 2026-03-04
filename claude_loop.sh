@@ -41,6 +41,37 @@ fi
 LOOP_COUNT=$1
 FEATURE_FILE=${2:-"./feature_list.json"}
 
+# 日志文件
+LOG_DIR="./claude_loop_logs"
+LOG_FILE="$LOG_DIR/claude_loop_$(date +%Y%m%d_%H%M%S).log"
+PROGRESS_FILE="./claude-progress.txt"
+
+# 创建日志目录
+mkdir -p "$LOG_DIR"
+
+# 打印带时间戳的日志函数
+log() {
+    local timestamp=$(date "+%Y-%m-%d %H:%M:%S")
+    echo "[$timestamp] $1"
+    echo "[$timestamp] $1" >> "$LOG_FILE"
+}
+
+# 打印带时间的进度信息
+progress_info() {
+    local iteration=$1
+    local total=$2
+    local percent=$(($iteration * 100 / $total))
+    local timestamp=$(date "+%Y-%m-%d %H:%M:%S")
+    echo "[$timestamp] 📊 进度: $iteration/$total ($percent%)"
+    echo "[$timestamp] 📊 进度: $iteration/$total ($percent%)" >> "$LOG_FILE"
+}
+
+# 打印分隔线
+print_separator() {
+    echo "----------------------------------------"
+    echo "----------------------------------------" >> "$LOG_FILE"
+}
+
 # Prompt文件路径
 PROMPTS_DIR="./prompts"
 INITIALIZER_PROMPT="$PROMPTS_DIR/initializer_prompt.md"
@@ -83,53 +114,14 @@ EOF
 # 判断是否为首次运行
 is_first_run() {
     if [ -f "$FEATURE_FILE" ]; then
-        local completed_count=$(grep '"passes": true' "$FEATURE_FILE" | wc -l)
+        local completed_count
+        completed_count=$(grep '"passes": true' "$FEATURE_FILE" | wc -l)
         if [ "$completed_count" -eq 0 ]; then
             return 0  # 首次运行
         fi
         return 1  # 非首次
     fi
     return 0  # 文件不存在，视为首次
-}
-
-# 选择合适的prompt
-if is_first_run; then
-    log "📌 首次运行，使用 Initializer Agent Prompt"
-    INITIAL_PROMPT=$(load_prompt "$INITIALIZER_PROMPT")
-else
-    log "📌 继续运行，使用 Coding Agent Prompt"
-    INITIAL_PROMPT=$(load_prompt "$CODING_PROMPT")
-fi
-
-# 日志文件
-LOG_DIR="./claude_loop_logs"
-LOG_FILE="$LOG_DIR/claude_loop_$(date +%Y%m%d_%H%M%S).log"
-PROGRESS_FILE="./claude-progress.txt"
-
-# 创建日志目录
-mkdir -p "$LOG_DIR"
-
-# 打印带时间戳的日志
-log() {
-    local timestamp=$(date "+%Y-%m-%d %H:%M:%S")
-    echo "[$timestamp] $1"
-    echo "[$timestamp] $1" >> "$LOG_FILE"
-}
-
-# 打印带时间的进度信息
-progress_info() {
-    local iteration=$1
-    local total=$2
-    local percent=$(($iteration * 100 / $total))
-    local timestamp=$(date "+%Y-%m-%d %H:%M:%S")
-    echo "[$timestamp] 📊 进度: $iteration/$total ($percent%)"
-    echo "[$timestamp] 📊 进度: $iteration/$total ($percent%)" >> "$LOG_FILE"
-}
-
-# 打印分隔线
-print_separator() {
-    echo "----------------------------------------"
-    echo "----------------------------------------" >> "$LOG_FILE"
 }
 
 # 打印会话开始信息（基于文章的最佳实践）
@@ -155,38 +147,6 @@ print_session_start() {
     fi
 
     print_separator
-}
-
-# 初始化
-print_separator
-log "🚀 开始 Claude 长程智能体任务"
-log "📝 循环次数: $LOOP_COUNT"
-log "📁 特性文件: $FEATURE_FILE"
-log "📄 日志文件: $LOG_FILE"
-print_separator
-
-# 检查feature文件是否存在
-if [ ! -f "$FEATURE_FILE" ]; then
-    log "⚠️  警告: 特性文件不存在: $FEATURE_FILE"
-    log "⚠️  将继续执行但不读取特性文件"
-fi
-
-# 检查是否是git仓库
-IS_GIT_REPO=false
-if git rev-parse --git-dir > /dev/null 2>&1; then
-    IS_GIT_REPO=true
-    log "✅ 检测到Git仓库"
-else
-    log "⚠️  警告: 不是Git仓库，将跳过commit"
-fi
-
-# 读取并显示当前特性状态
-show_feature_status() {
-    if [ -f "$FEATURE_FILE" ]; then
-        local total=$(grep -o '"id"' "$FEATURE_FILE" | wc -l)
-        local completed=$(grep '"passes": true' "$FEATURE_FILE" | wc -l)
-        log "📊 特性状态: $completed/$total 已完成"
-    fi
 }
 
 # 更新进度文件
@@ -225,7 +185,8 @@ commit_changes() {
         # 获取本次会话新完成的特性
         if [ -f "$FEATURE_FILE" ]; then
             # 提取最新标记为passes: true的特性描述
-            local recent_completed=$(grep -B3 '"passes": true' "$FEATURE_FILE" 2>/dev/null | grep '"description"' | tail -1 | sed 's/.*"description": "\(.*\)".*/\1/')
+            local recent_completed
+            recent_completed=$(grep -B3 '"passes": true' "$FEATURE_FILE" 2>/dev/null | grep '"description"' | tail -1 | sed 's/.*"description": "\(.*\)".*/\1/')
             if [ -n "$recent_completed" ]; then
                 # 截断过长的描述
                 if [ ${#recent_completed} -gt 50 ]; then
@@ -265,6 +226,51 @@ check_mergeable() {
     fi
 }
 
+# 读取并显示当前特性状态
+show_feature_status() {
+    if [ -f "$FEATURE_FILE" ]; then
+        local total
+        local completed
+        total=$(grep -o '"id"' "$FEATURE_FILE" | wc -l)
+        completed=$(grep '"passes": true' "$FEATURE_FILE" | wc -l)
+        log "📊 特性状态: $completed/$total 已完成"
+    fi
+}
+
+# ===== 主逻辑开始 =====
+
+# 选择合适的prompt
+if is_first_run; then
+    log "📌 首次运行，使用 Initializer Agent Prompt"
+    INITIAL_PROMPT=$(load_prompt "$INITIALIZER_PROMPT")
+else
+    log "📌 继续运行，使用 Coding Agent Prompt"
+    INITIAL_PROMPT=$(load_prompt "$CODING_PROMPT")
+fi
+
+# 初始化
+print_separator
+log "🚀 开始 Claude 长程智能体任务"
+log "📝 循环次数: $LOOP_COUNT"
+log "📁 特性文件: $FEATURE_FILE"
+log "📄 日志文件: $LOG_FILE"
+print_separator
+
+# 检查feature文件是否存在
+if [ ! -f "$FEATURE_FILE" ]; then
+    log "⚠️  警告: 特性文件不存在: $FEATURE_FILE"
+    log "⚠️  将继续执行但不读取特性文件"
+fi
+
+# 检查是否是git仓库
+IS_GIT_REPO=false
+if git rev-parse --git-dir > /dev/null 2>&1; then
+    IS_GIT_REPO=true
+    log "✅ 检测到Git仓库"
+else
+    log "⚠️  警告: 不是Git仓库，将跳过commit"
+fi
+
 # 主循环
 SUCCESS_COUNT=0
 FAIL_COUNT=0
@@ -278,9 +284,11 @@ for i in $(seq 1 $LOOP_COUNT); do
 
     log "💬 调用Claude..."
 
-    # 调用claude
+    # 调用claude（需要unset CLAUDECODE环境变量以避免嵌套会话）
     if command -v claude &> /dev/null; then
-        claude --print "$INITIAL_PROMPT" >> "$LOG_FILE" 2>&1
+        # 临时unset CLAUDECODE环境变量
+        unset CLAUDECODE
+        claude -p "$INITIAL_PROMPT" >> "$LOG_FILE" 2>&1
         CLAUDE_EXIT_CODE=$?
     else
         log "❌ 错误: claude命令不可用"
@@ -321,8 +329,9 @@ log "📝 进度文件: $PROGRESS_FILE"
 
 # 显示特性完成状态
 if [ -f "$FEATURE_FILE" ]; then
-    local total=$(grep -o '"id"' "$FEATURE_FILE" | wc -l)
-    local completed=$(grep '"passes": true' "$FEATURE_FILE" | wc -l)
+    local total completed
+    total=$(grep -o '"id"' "$FEATURE_FILE" | wc -l)
+    completed=$(grep '"passes": true' "$FEATURE_FILE" | wc -l)
     log "📋 特性完成: $completed/$total"
 fi
 print_separator

@@ -1,0 +1,40 @@
+{
+  "project": "usb-camera-ai-analysis",
+  "version": "1.0.0",
+  "camera": {
+    "device_index": 0,
+    "resolution": {
+      "width": 1280,
+      "height": 720
+    },
+    "fps": 30,
+    "auto_exposure": true
+  },
+  "server": {
+    "host": "0.0.0.0",
+    "port": 5000,
+    "debug": false
+  },
+  "ocr": {
+    "enabled": true,
+    "lang": "ch,en",
+    "use_angle_cls": true
+  },
+  "ui_detection": {
+    "enabled": true,
+    "model_path": "models/yolov8n.pt",
+    "conf_threshold": 0.25
+  },
+  "anomaly_detection": {
+    "enabled": true,
+    "color_ranges": {
+      "red": [[0, 100, 100], [10, 255, 255]],
+      "green": [[40, 40, 40], [80, 255, 255]],
+      "blue": [[100, 50, 50], [140, 255, 255]]
+    }
+  },
+  "capture": {
+    "save_dir": "captures",
+    "auto_save": false
+  }
+}

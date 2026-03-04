@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>USB摄像头AI分析系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            color: #333;
+            font-size: 24px;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 20px;
+        }
+
+        .video-section {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .video-container {
+            width: 100%;
+            aspect-ratio: 16/9;
+            background: #000;
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .video-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .controls {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #007bff;
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background: #0056b3;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: #fff;
+        }
+
+        .btn-success:hover {
+            background: #1e7e34;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: #fff;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: #fff;
+        }
+
+        .btn-secondary:hover {
+            background: #545b62;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .panel {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .panel h2 {
+            font-size: 16px;
+            color: #333;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-connected {
+            background: #28a745;
+        }
+
+        .status-disconnected {
+            background: #dc3545;
+        }
+
+        .status-text {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .results-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .result-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            font-size: 13px;
+        }
+
+        .result-item:last-child {
+            border-bottom: none;
+        }
+
+        .result-label {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .result-value {
+            color: #666;
+            margin-top: 4px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #007bff;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .camera-select {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        @media (max-width: 900px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>USB摄像头AI分析系统</h1>
+        </header>
+
+        <div class="main-content">
+            <div class="video-section">
+                <div class="video-container">
+                    <img id="videoStream" src="/video_feed" alt="Video Stream">
+                </div>
+                <div class="controls">
+                    <button id="btnOpen" class="btn btn-success">打开摄像头</button>
+                    <button id="btnClose" class="btn btn-danger" disabled>关闭摄像头</button>
+                    <button id="btnCapture" class="btn btn-primary" disabled>截图</button>
+                    <button id="btnOCR" class="btn btn-secondary" disabled>OCR识别</button>
+                    <button id="btnUIDetect" class="btn btn-secondary" disabled>UI检测</button>
+                    <button id="btnAnomaly" class="btn btn-secondary" disabled>异常检测</button>
+                    <button id="btnAnalyze" class="btn btn-secondary" disabled>完整分析</button>
+                </div>
+                <div id="errorMessage" class="error-message"></div>
+            </div>
+
+            <div class="sidebar">
+                <div class="panel">
+                    <h2>摄像头状态</h2>
+                    <div id="cameraStatus">
+                        <span class="status-indicator status-disconnected"></span>
+                        <span class="status-text">未连接</span>
+                    </div>
+                    <select id="cameraSelect" class="camera-select">
+                        <option value="0">摄像头 0</option>
+                    </select>
+                    <button id="btnRefreshCameras" class="btn btn-secondary" style="width: 100%;">刷新摄像头列表</button>
+                </div>
+
+                <div class="panel">
+                    <h2>分析结果</h2>
+                    <div id="resultsList" class="results-list">
+                        <div class="result-item">
+                            <div class="result-value">等待分析...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <h2>快捷操作</h2>
+                    <button id="btnSettings" class="btn btn-secondary" style="width: 100%; margin-bottom: 10px;">设置</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const videoStream = document.getElementById('videoStream');
+        const btnOpen = document.getElementById('btnOpen');
+        const btnClose = document.getElementById('btnClose');
+        const btnCapture = document.getElementById('btnCapture');
+        const btnOCR = document.getElementById('btnOCR');
+        const btnUIDetect = document.getElementById('btnUIDetect');
+        const btnAnomaly = document.getElementById('btnAnomaly');
+        const btnAnalyze = document.getElementById('btnAnalyze');
+        const btnRefreshCameras = document.getElementById('btnRefreshCameras');
+        const cameraStatus = document.getElementById('cameraStatus');
+        const cameraSelect = document.getElementById('cameraSelect');
+        const resultsList = document.getElementById('resultsList');
+        const errorMessage = document.getElementById('errorMessage');
+
+        let isConnected = false;
+
+        function updateButtonStates() {
+            btnOpen.disabled = isConnected;
+            btnClose.disabled = !isConnected;
+            btnCapture.disabled = !isConnected;
+            btnOCR.disabled = !isConnected;
+            btnUIDetect.disabled = !isConnected;
+            btnAnomaly.disabled = !isConnected;
+            btnAnalyze.disabled = !isConnected;
+        }
+
+        function updateStatus(connected) {
+            isConnected = connected;
+            if (connected) {
+                cameraStatus.innerHTML = '<span class="status-indicator status-connected"></span><span class="status-text">已连接</span>';
+            } else {
+                cameraStatus.innerHTML = '<span class="status-indicator status-disconnected"></span><span class="status-text">未连接</span>';
+            }
+            updateButtonStates();
+        }
+
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+            setTimeout(() => {
+                errorMessage.style.display = 'none';
+            }, 5000);
+        }
+
+        function showResults(results) {
+            let html = '';
+            for (const [key, value] of Object.entries(results)) {
+                if (value && typeof value === 'object') {
+                    html += `<div class="result-item"><div class="result-label">${key}</div>`;
+                    html += `<div class="result-value">${JSON.stringify(value, null, 2)}</div></div>`;
+                } else {
+                    html += `<div class="result-item"><div class="result-label">${key}</div>`;
+                    html += `<div class="result-value">${value}</div></div>`;
+                }
+            }
+            resultsList.innerHTML = html;
+        }
+
+        function showLoading() {
+            resultsList.innerHTML = '<div class="loading"><div class="spinner"></div><p style="margin-top: 10px;">分析中...</p></div>';
+        }
+
+        // 打开摄像头
+        btnOpen.addEventListener('click', async () => {
+            try {
+                const response = await fetch('/api/camera/open', { method: 'POST' });
+                const data = await response.json();
+                if (data.success) {
+                    updateStatus(true);
+                    videoStream.src = '/video_feed?' + new Date().getTime();
+                } else {
+                    showError(data.message);
+                }
+            } catch (e) {
+                showError('打开摄像头失败: ' + e.message);
+            }
+        });
+
+        // 关闭摄像头
+        btnClose.addEventListener('click', async () => {
+            try {
+                await fetch('/api/camera/close', { method: 'POST' });
+                updateStatus(false);
+                videoStream.src = '';
+            } catch (e) {
+                showError('关闭摄像头失败: ' + e.message);
+            }
+        });
+
+        // 截图
+        btnCapture.addEventListener('click', async () => {
+            try {
+                const response = await fetch('/api/capture', { method: 'POST' });
+                const data = await response.json();
+                if (data.success) {
+                    showResults({ 截图: data.filepath });
+                } else {
+                    showError(data.message);
+                }
+            } catch (e) {
+                showError('截图失败: ' + e.message);
+            }
+        });
+
+        // OCR识别
+        btnOCR.addEventListener('click', async () => {
+            showLoading();
+            try {
+                const response = await fetch('/api/ocr', { method: 'POST' });
+                const data = await response.json();
+                if (data.success) {
+                    showResults({ OCR结果: data.results });
+                } else {
+                    showError(data.message);
+                }
+            } catch (e) {
+                showError('OCR识别失败: ' + e.message);
+            }
+        });
+
+        // UI检测
+        btnUIDetect.addEventListener('click', async () => {
+            showLoading();
+            try {
+                const response = await fetch('/api/ui-detect', { method: 'POST' });
+                const data = await response.json();
+                if (data.success) {
+                    showResults({ UI元素: data.results });
+                } else {
+                    showError(data.message);
+                }
+            } catch (e) {
+                showError('UI检测失败: ' + e.message);
+            }
+        });
+
+        // 异常检测
+        btnAnomaly.addEventListener('click', async () => {
+            showLoading();
+            try {
+                const response = await fetch('/api/anomaly', { method: 'POST' });
+                const data = await response.json();
+                if (data.success) {
+                    showResults({ 异常检测: data.results });
+                } else {
+                    showError(data.message);
+                }
+            } catch (e) {
+                showError('异常检测失败: ' + e.message);
+            }
+        });
+
+        // 完整分析
+        btnAnalyze.addEventListener('click', async () => {
+            showLoading();
+            try {
+                const response = await fetch('/api/analyze', { method: 'POST' });
+                const data = await response.json();
+                if (data.success) {
+                    showResults(data.results);
+                } else {
+                    showError(data.message);
+                }
+            } catch (e) {
+                showError('分析失败: ' + e.message);
+            }
+        });
+
+        // 刷新摄像头列表
+        btnRefreshCameras.addEventListener('click', async () => {
+            try {
+                const response = await fetch('/api/cameras');
+                const data = await response.json();
+                cameraSelect.innerHTML = '';
+                data.cameras.forEach(index => {
+                    const option = document.createElement('option');
+                    option.value = index;
+                    option.textContent = `摄像头 ${index}`;
+                    cameraSelect.appendChild(option);
+                });
+            } catch (e) {
+                showError('获取摄像头列表失败: ' + e.message);
+            }
+        });
+
+        // 页面加载时检查摄像头状态
+        async function checkStatus() {
+            try {
+                const response = await fetch('/api/camera/status');
+                const data = await response.json();
+                if (data.is_opened) {
+                    updateStatus(true);
+                }
+            } catch (e) {
+                console.error('检查状态失败:', e);
+            }
+        }
+
+        checkStatus();
+    </script>
+</body>
+</html>

@@ -1,50 +1,60 @@
-# Initializer Agent Prompt
+# Initializer Agent Prompt - USB摄像头AI分析系统
 
-你是一个初始化代理(Initializer Agent)。你的任务是为项目奠定基础。
+你是一个初始化代理(Initializer Agent)。你的任务是为USB摄像头AI分析系统项目奠定基础。
 
-## 第一步：创建 feature_list.json
+## 项目背景
 
-基于 `app_spec.txt`（如果存在）或用户需求，创建一个详细的JSON文件，包含多个测试用例。每个测试用例必须包括：
-- `id`: 唯一标识符
-- `category`: 类别 (functional 或 style)
-- `description`: 功能描述
-- `steps`: 测试步骤数组
-- `passes`: 初始为 false
+本项目是一个嵌入式设备屏幕捕获与AI分析系统，功能包括：
+- USB摄像头捕获嵌入式设备界面
+- UI元素检测（按钮、文本框等）
+- OCR文字识别
+- 异常检测（LED颜色、数码管等）
+- 截图对比
+- 网络传输（远程实时查看）
 
-要求：
-- 至少创建多个功能测试
-- 包含不同优先级的功能
-- 按优先级排序：基础功能优先
-- 所有测试初始为 "passes": false
+## 任务
 
-**关键规则**：只能将 "passes" 从 false 改为 true，永不删除或修改测试用例。
+### 1. 查看项目需求
 
-## 第二步：创建 init.sh
+首先阅读以下文件了解项目需求：
+- `docs/plans/2026-03-05-usb-camera-ai-analysis-design.md` - 设计文档
+- `feature_list.json` - 功能清单
 
-创建一个设置脚本，包含：
-1. 安装所需依赖
-2. 启动必要的服务
-3. 打印有用的访问信息
+### 2. 创建项目结构
 
-## 第三步：初始化 Git
+创建以下目录结构：
+```
+usb-camera-ai-analysis/
+├── src/
+│   ├── __init__.py
+│   ├── camera.py        # 摄像头捕获模块
+│   ├── analyzer.py      # AI分析模块
+│   └── server.py        # Web服务器
+├── static/              # 静态文件
+├── templates/           # HTML模板
+├── tests/              # 测试
+├── requirements.txt     # 依赖
+├── config.json         # 配置文件
+└── README.md          # 说明文档
+```
 
-创建 git 仓库并进行首次提交，包含：
-- feature_list.json
-- init.sh
-- claude-progress.txt
+### 3. 创建 requirements.txt
 
-提交信息："Initial setup: feature_list.json, init.sh, and project structure"
+包含以下依赖：
+- opencv-python
+- flask
+- numpy
+- pillow
 
-## 第四步：创建项目结构
+### 4. 实现基础功能
 
-根据需求设置基本项目结构。
+从 `feature_list.json` 中选择最高优先级的功能开始实现。
 
 ## 结束会话前
 
-在上下文用完之前：
-1. 使用描述性信息提交所有工作
-2. 创建 `claude-progress.txt` 包含摘要
-3. 确保 feature_list.json 已保存
-4. 保持环境处于干净的工作状态
+1. 确保所有创建的文件已保存
+2. 更新 `feature_list.json` 中已完成功能的 `passes` 为 `true`
+3. 更新 `claude-progress.txt` 记录进度
+4. 使用描述性信息提交到 git
 
 **注意**：目标是生产级质量。注重质量而非速度。
